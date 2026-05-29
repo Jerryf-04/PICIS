@@ -47,6 +47,8 @@ export default function SpaceGameView({
 
   // UI state overlays
   const [showGuide, setShowGuide] = useState(true);
+  const [hudActive, setHudActive] = useState(false);
+  const hudActiveRef = useRef(false);
 
   // On-screen direction thruster keys
   const triggerThrust = (direction: string, active: boolean) => {
@@ -790,6 +792,13 @@ export default function SpaceGameView({
         z: Math.round(camera.position.z)
       });
 
+      // Smooth HUD activation gateway (fade-in only after crossing porthole window threshold)
+      const shouldHudShow = isSpaceState && transitionProgress >= 0.95;
+      if (shouldHudShow !== hudActiveRef.current) {
+        hudActiveRef.current = shouldHudShow;
+        setHudActive(shouldHudShow);
+      }
+
       // C. INTERACTIVE ENVIRONMENT FADING
       // Hide plaster wall after we glide past the target portal
       const isWallActive = transitionProgress < 0.98;
@@ -857,7 +866,8 @@ export default function SpaceGameView({
         const labelEl = document.getElementById(`proj-label-${p.id}`);
 
         if (projMesh && labelEl) {
-          if (!isSpaceState) {
+          // Hide planet labels until camera has passed the porthole window boundary
+          if (!isSpaceState || transitionProgress < 0.95) {
             labelEl.style.display = 'none';
             return;
           }
@@ -915,9 +925,10 @@ export default function SpaceGameView({
               // High-precision depth indexing: ensure front-facing tags overlay perfectly above distant tags
               labelEl.style.zIndex = String(Math.round(1000 - stableDistanceToCam));
 
-              // Smooth fade-out based on camera distance (immediately stable without transitionProgress lag)
-              const visualOpacity = Math.max(0, Math.min(1.0, (380 - stableDistanceToCam) / 260));
-              labelEl.style.opacity = String(visualOpacity);
+              // Smooth fade-in as we finish transition, combined with distance fade
+              const transitionFade = Math.max(0, Math.min(1.0, (transitionProgress - 0.95) / 0.05));
+              const distanceOpacity = Math.max(0, Math.min(1.0, (380 - stableDistanceToCam) / 260));
+              labelEl.style.opacity = String(distanceOpacity * transitionFade);
 
               // Cinematic depth of-field blur removed per user request: keep tags sharp at all distances
               labelEl.style.filter = 'none';
@@ -1077,80 +1088,86 @@ export default function SpaceGameView({
         })}
       </div>
 
-      {/* SPACE INTERACTIVE HUD GAUGE OVERLAYS (Visible only in active space navigation) */}
-      {viewMode === 'space' && (
-        <>
-          {/* Coordinates Gauge */}
-          <div className="absolute left-10 top-28 lg:left-14 lg:top-36 xl:left-16 xl:top-40 font-mono text-[10px] text-slate-400 bg-slate-950/80 backdrop-blur-md px-4 py-2.5 rounded-xl border border-slate-800/60 leading-relaxed space-y-0.5 select-none animate-fade-in pointer-events-none z-10">
-            <p className="flex items-center gap-1.5 font-bold text-slate-100">
-              <Rocket className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
-              <span>{lang === 'zh' ? '星系导航面板' : 'COSMOS NAV HUD'}</span>
-            </p>
-            <p>CAM X: <span className="text-white font-bold">{cameraCoords.x}m</span></p>
-            <p>CAM Y: <span className="text-white font-bold">{cameraCoords.y}m</span></p>
-            <p>CAM Z: <span className="text-white font-bold">{cameraCoords.z}m</span></p>
-          </div>
+      {/* SPACE INTERACTIVE HUD GAUGE OVERLAYS (Visible only in active space navigation with elegant fade-in) */}
+      <div 
+        className={`transition-opacity duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none z-10 absolute inset-0 ${
+          viewMode === 'space' && hudActive ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        {viewMode === 'space' && (
+          <>
+            {/* Coordinates Gauge */}
+            <div className="absolute left-10 top-28 lg:left-14 lg:top-36 xl:left-16 xl:top-40 font-mono text-[10px] text-slate-400 bg-slate-950/80 backdrop-blur-md px-4 py-2.5 rounded-xl border border-slate-800/60 leading-relaxed space-y-0.5 select-none pointer-events-none z-10">
+              <p className="flex items-center gap-1.5 font-bold text-slate-100">
+                <Rocket className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
+                <span>{lang === 'zh' ? '星系导航面板' : 'COSMOS NAV HUD'}</span>
+              </p>
+              <p>CAM X: <span className="text-white font-bold">{cameraCoords.x}m</span></p>
+              <p>CAM Y: <span className="text-white font-bold">{cameraCoords.y}m</span></p>
+              <p>CAM Z: <span className="text-white font-bold">{cameraCoords.z}m</span></p>
+            </div>
 
-          {/* Hover Status Info Top Center Banner */}
-          {hoveredProject && (
-            <div className="absolute top-10 lg:top-14 xl:top-16 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md border border-slate-700/60 px-5 py-3 rounded-2xl shadow-xl flex items-center gap-4 animate-fade-in pointer-events-none text-slate-200 select-none z-10">
-              <div className="w-3.5 h-3.5 rounded-full animate-ping bg-slate-300" />
-              <div>
-                <h4 className="text-xs font-bold font-sans tracking-tight uppercase text-white">{hoveredProject.name}</h4>
-                <p className="text-[10px] text-slate-400 font-mono mt-0.5">
-                  Type: {hoveredProject.type} | Founding: {hoveredProject.founded}
+            {/* Hover Status Info Top Center Banner */}
+            {hoveredProject && (
+              <div className="absolute top-10 lg:top-14 xl:top-16 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md border border-slate-700/60 px-5 py-3 rounded-2xl shadow-xl flex items-center gap-4 pointer-events-none text-slate-200 select-none z-10">
+                <div className="w-3.5 h-3.5 rounded-full animate-ping bg-slate-300" />
+                <div>
+                  <h4 className="text-xs font-bold font-sans tracking-tight uppercase text-white">{hoveredProject.name}</h4>
+                  <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                    Type: {hoveredProject.type} | Founding: {hoveredProject.founded}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Bottom Information Notice Bar */}
+            <div className="absolute bottom-10 left-10 lg:bottom-14 lg:left-14 xl:bottom-16 xl:left-16 pointer-events-none font-sans text-slate-400 text-xs text-shadow select-none z-10">
+              <div className="bg-slate-900/80 backdrop-blur-md px-4 py-3 rounded-2xl border border-slate-800/80 max-w-sm pointer-events-auto shadow-lg">
+                <p className="text-slate-200 text-xs flex items-center gap-1.5 font-semibold">
+                  <Compass className="w-4 h-4 text-emerald-400 animate-spin-slow" />
+                  <span>{lang === 'zh' ? '星际漫游助手' : 'Cosmic Guidance'}</span>
+                </p>
+                <p className="text-[11px] text-slate-400 leading-relaxed mt-1.5">
+                  {t.game.hoverTip}
                 </p>
               </div>
             </div>
-          )}
 
-          {/* Bottom Information Notice Bar */}
-          <div className="absolute bottom-10 left-10 lg:bottom-14 lg:left-14 xl:bottom-16 xl:left-16 pointer-events-none font-sans text-slate-400 text-xs text-shadow select-none z-10">
-            <div className="bg-slate-900/80 backdrop-blur-md px-4 py-3 rounded-2xl border border-slate-800/80 max-w-sm pointer-events-auto shadow-lg">
-              <p className="text-slate-200 text-xs flex items-center gap-1.5 font-semibold">
-                <Compass className="w-4 h-4 text-emerald-400 animate-spin-slow" />
-                <span>{lang === 'zh' ? '星际漫游助手' : 'Cosmic Guidance'}</span>
-              </p>
-              <p className="text-[11px] text-slate-400 leading-relaxed mt-1.5">
-                {t.game.hoverTip}
-              </p>
-            </div>
-          </div>
-
-          {/* On-Screen Keyboard Guide Helpers Box in bottom right, replacing joystick */}
-          {showGuide ? (
-            <div className="absolute bottom-10 right-10 lg:bottom-14 lg:right-14 xl:bottom-16 xl:right-16 bg-slate-900/95 border border-indigo-500/30 text-slate-200 px-6 py-4 rounded-2xl shadow-2xl space-y-2 pointer-events-auto max-w-sm animate-fade-in select-none z-10 w-72 sm:w-80">
-              <button
-                onClick={() => setShowGuide(false)}
-                className="absolute top-2.5 right-3 w-5 h-5 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 font-mono text-[10px] rounded-full flex items-center justify-center cursor-pointer"
-              >
-                x
-              </button>
-              <p className="text-xs font-bold text-slate-100 flex items-center gap-1.5 mr-6">
-                <HelpCircle className="w-4 h-4 text-indigo-400 animate-spin-slow" />
-                <span>{t.game.instructions}</span>
-              </p>
-              <div className="text-[10px] text-slate-400 font-mono leading-relaxed space-y-1 pt-1.5 border-t border-slate-800">
-                <p>{t.game.keys.forward}</p>
-                <p>{t.game.keys.backward}</p>
-                <p>{t.game.keys.left}</p>
-                <p>{t.game.keys.right}</p>
-                <p>{t.game.keys.up}</p>
-                <p>{t.game.keys.down}</p>
-                {t.game.keys.mouseLook && <p className="text-indigo-300 font-sans mt-1">{t.game.keys.mouseLook}</p>}
+            {/* On-Screen Keyboard Guide Helpers Box in bottom right, replacing joystick */}
+            {showGuide ? (
+              <div className="absolute bottom-10 right-10 lg:bottom-14 lg:right-14 xl:bottom-16 xl:right-16 bg-slate-900/95 border border-indigo-500/30 text-slate-200 px-6 py-4 rounded-2xl shadow-2xl space-y-2 pointer-events-auto max-w-sm select-none z-10 w-72 sm:w-80">
+                <button
+                  onClick={() => setShowGuide(false)}
+                  className="absolute top-2.5 right-3 w-5 h-5 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 font-mono text-[10px] rounded-full flex items-center justify-center cursor-pointer"
+                >
+                  x
+                </button>
+                <p className="text-xs font-bold text-slate-100 flex items-center gap-1.5 mr-6">
+                  <HelpCircle className="w-4 h-4 text-indigo-400 animate-spin-slow" />
+                  <span>{t.game.instructions}</span>
+                </p>
+                <div className="text-[10px] text-slate-400 font-mono leading-relaxed space-y-1 pt-1.5 border-t border-slate-800">
+                  <p>{t.game.keys.forward}</p>
+                  <p>{t.game.keys.backward}</p>
+                  <p>{t.game.keys.left}</p>
+                  <p>{t.game.keys.right}</p>
+                  <p>{t.game.keys.up}</p>
+                  <p>{t.game.keys.down}</p>
+                  {t.game.keys.mouseLook && <p className="text-indigo-300 font-sans mt-1">{t.game.keys.mouseLook}</p>}
+                </div>
               </div>
-            </div>
-          ) : (
-            <button
-              onClick={() => setShowGuide(true)}
-              className="absolute bottom-10 right-10 lg:bottom-14 lg:right-14 xl:bottom-16 xl:right-16 w-11 h-11 rounded-full bg-slate-900/95 border border-indigo-500/30 flex items-center justify-center text-indigo-400 hover:text-indigo-300 shadow-2xl select-none z-10 cursor-pointer pointer-events-auto animate-fade-in transition-all duration-300 group"
-              title={t.game.instructions}
-            >
-              <HelpCircle className="w-5 h-5 group-hover:scale-110 transition-all duration-300" />
-            </button>
-          )}
-        </>
-      )}
+            ) : (
+              <button
+                onClick={() => setShowGuide(true)}
+                className="absolute bottom-10 right-10 lg:bottom-14 lg:right-14 xl:bottom-16 xl:right-16 w-11 h-11 rounded-full bg-slate-900/95 border border-indigo-500/30 flex items-center justify-center text-indigo-400 hover:text-indigo-300 shadow-2xl select-none z-10 cursor-pointer pointer-events-auto transition-all duration-300 group"
+                title={t.game.instructions}
+              >
+                <HelpCircle className="w-5 h-5 group-hover:scale-110 transition-all duration-300" />
+              </button>
+            )}
+          </>
+        )}
+      </div>
 
     </div>
   );

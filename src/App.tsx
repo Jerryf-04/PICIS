@@ -12,6 +12,7 @@ import TeamModal from './components/TeamModal';
 export default function App() {
   // Mobile device viewport constraint check (allowing desktop, laptop, and iPad/tablet)
   const [isMobile, setIsMobile] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkDevice = () => {
@@ -20,6 +21,14 @@ export default function App() {
     checkDevice();
     window.addEventListener('resize', checkDevice);
     return () => window.removeEventListener('resize', checkDevice);
+  }, []);
+
+  useEffect(() => {
+    // Elegant buffer loader to give ThreeJS canvas and assets time to compile and lay out fully
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1800);
+    return () => clearTimeout(timer);
   }, []);
 
   // Localization: 'zh' list or 'en' list
@@ -137,37 +146,18 @@ export default function App() {
         
         {/* Top brand */}
         <div className="w-full text-center mt-6 z-10">
-          <h1 className="text-3xl font-black tracking-tighter text-white">
-            PICIS <span className="font-sans text-xl border-l border-white/20 pl-2.5 ml-2 mr-2">辟奇</span>
+          <h1 className="text-4xl sm:text-5xl font-black tracking-tighter font-sans select-none leading-none text-white">
+            PICIS <span className="font-sans">辟奇</span>
           </h1>
         </div>
 
-        {/* Dynamic centered geometric orbital cue */}
-        <div className="relative flex flex-col items-center justify-center max-w-sm text-center px-4 z-10 my-auto">
-          <div className="relative w-28 h-28 mb-8 flex items-center justify-center">
-            {/* Spinning clean border */}
-            <div className="absolute inset-0 rounded-full border border-indigo-500/20" />
-            <div className="absolute inset-2 rounded-full border border-dashed border-indigo-400/35 animate-[spin_12s_linear_infinite]" />
-            <div className="absolute inset-5 rounded-full border border-indigo-500/15" />
-            <Compass className="w-8 h-8 text-indigo-400 animate-pulse" />
-          </div>
-
-          {/* Chinese notice */}
-          <h2 className="text-sm sm:text-base font-bold text-white tracking-tight leading-snug">
+        {/* Centered clean dual-locale notice block */}
+        <div className="relative flex flex-col items-center justify-center max-w-sm text-center px-4 z-10 my-auto space-y-3.5">
+          <h2 className="text-[18px] sm:text-[19px] font-bold text-white tracking-[0.12em] font-sans leading-none whitespace-nowrap">
             请通过电脑网页版或平板打开
           </h2>
-          <p className="text-[11.5px] text-slate-400 tracking-tight leading-relaxed mt-2.5 max-w-[270px]">
-            为保障 3D 宇宙星宿地图及项目共创平台的最佳视觉渲染与全面交互，建议您在电脑浏览器或 iPad 等更宽大屏幕的设备上开启。
-          </p>
-
-          <hr className="w-8 border-t border-slate-800 my-6" />
-
-          {/* English notice */}
-          <h2 className="text-xs sm:text-sm font-bold text-slate-200 tracking-tight leading-snug uppercase font-sans">
+          <p className="text-[9.5px] sm:text-[10px] font-bold text-white tracking-[0.18em] uppercase font-sans leading-none whitespace-nowrap pl-[0.18em]">
             Please open via desktop browser or tablet
-          </h2>
-          <p className="text-[10.5px] text-slate-400 tracking-tight leading-relaxed mt-2 max-w-[270px] font-sans">
-            To guarantee professional 3D graphic rendering and standard interactive matches, please access PICIS on your computer, laptop, or iPad.
           </p>
         </div>
 
@@ -203,6 +193,8 @@ export default function App() {
             top: '0px',
             transform: 'translate(-50%, -50%)',
             willChange: 'transform, opacity',
+            display: 'none',
+            opacity: 0
           }}
         >
           <div className="relative flex items-center justify-center">
@@ -412,6 +404,41 @@ export default function App() {
           translations={t}
         />
       )}
+
+      {/* CINEMATIC PAGE LOADER CURTAIN */}
+      <AnimatePresence>
+        {isLoading && (
+          <motion.div
+            key="global-loader"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed inset-0 min-h-screen bg-white z-[100] flex flex-col items-center justify-center select-none"
+          >
+            <div className="flex flex-col items-center space-y-7 px-6">
+              {/* Elegant Display branding text (matches homepage logo exactly in font-weight, size ratios, and fonts) */}
+              <motion.h1 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                className="text-4xl sm:text-5xl font-black tracking-tighter font-sans select-none leading-none text-slate-950"
+              >
+                PICIS <span className="font-sans">辟奇</span>
+              </motion.h1>
+
+              {/* Extremely minimal progress timeline bar aligned beneath */}
+              <div className="w-32 sm:w-40 h-[2px] bg-slate-100 rounded-full overflow-hidden relative">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: "100%" }}
+                  transition={{ duration: 1.6, ease: "easeInOut" }}
+                  className="h-full bg-slate-950 rounded-full"
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </div>
   );
