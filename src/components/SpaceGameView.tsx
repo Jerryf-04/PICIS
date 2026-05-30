@@ -20,6 +20,130 @@ const TYPE_COLORS: Record<string, string> = {
   Philanthropy: '#db2777'   // Rose Pink
 };
 
+// Bilingual tags mapping for inter-planet connection lines
+const PROJECT_TAGS: Record<string, { zh: string; en: string }[]> = {
+  'visible-sound': [
+    { zh: '艺术公益', en: 'Art Philanthropy' },
+    { zh: '声学艺术', en: 'Acoustic Art' }
+  ],
+  'commonogy-ai': [
+    { zh: '人工智能', en: 'A.I. Research' },
+    { zh: '学术协作', en: 'Academic Coop' }
+  ],
+  'chatsync-ai': [
+    { zh: '人工智能', en: 'A.I. Research' },
+    { zh: '语音翻译', en: 'Speech Translation' }
+  ],
+  'salix-apicis': [
+    { zh: '青年领袖', en: 'Youth Leadership' },
+    { zh: '校友网络', en: 'Alumni Network' }
+  ],
+  'beijing-cloud': [
+    { zh: '人工智能', en: 'A.I. Research' },
+    { zh: '智能硬件', en: 'Smart Hardware' }
+  ],
+  'ysic': [
+    { zh: '绿色可持续', en: 'Sustainability' },
+    { zh: 'ESG投资', en: 'ESG Investment' }
+  ],
+  'gagro': [
+    { zh: '互助社区', en: 'Resource Sharing' },
+    { zh: '学术协作', en: 'Academic Coop' }
+  ],
+  'andover-launchpad': [
+    { zh: '科创路演', en: 'Tech Demo Day' },
+    { zh: '校友网络', en: 'Alumni Network' }
+  ],
+  'ecoecho': [
+    { zh: '绿色可持续', en: 'Sustainability' },
+    { zh: '声学艺术', en: 'Acoustic Art' }
+  ],
+  'auramind': [
+    { zh: '心灵解压', en: 'Mental Health' },
+    { zh: '互助社区', en: 'Resource Sharing' }
+  ],
+  'bilingual-bridge': [
+    { zh: '非遗文化', en: 'Heritage Preservation' },
+    { zh: '语音翻译', en: 'Speech Translation' }
+  ],
+  'veritas-research': [
+    { zh: '学术协作', en: 'Academic Coop' },
+    { zh: '青年领袖', en: 'Youth Leadership' }
+  ],
+  'codeher': [
+    { zh: '教育支教', en: 'Tech Tutor' },
+    { zh: '青年领袖', en: 'Youth Leadership' }
+  ],
+  'zenflow': [
+    { zh: '心灵解压', en: 'Mental Health' },
+    { zh: '声学艺术', en: 'Acoustic Art' }
+  ],
+  'neuroglow': [
+    { zh: '智能硬件', en: 'Smart Hardware' },
+    { zh: '心灵解压', en: 'Mental Health' }
+  ],
+  'chinatown-heritage': [
+    { zh: '非遗文化', en: 'Heritage Preservation' },
+    { zh: '青年领袖', en: 'Youth Leadership' }
+  ],
+  'artisan-guild': [
+    { zh: '非遗文化', en: 'Heritage Preservation' },
+    { zh: '声学艺术', en: 'Acoustic Art' }
+  ],
+  'foodprint': [
+    { zh: '绿色可持续', en: 'Sustainability' },
+    { zh: '人工智能', en: 'A.I. Research' }
+  ],
+  'docuverse': [
+    { zh: '非遗文化', en: 'Heritage Preservation' },
+    { zh: '互助社区', en: 'Resource Sharing' }
+  ],
+  'tutorup': [
+    { zh: '教育支教', en: 'Tech Tutor' },
+    { zh: '互助社区', en: 'Resource Sharing' }
+  ],
+  'nebula-cook': [
+    { zh: '声学艺术', en: 'Acoustic Art' },
+    { zh: '智能硬件', en: 'Smart Hardware' }
+  ],
+  'solis-energy': [
+    { zh: '绿色可持续', en: 'Sustainability' },
+    { zh: '智能硬件', en: 'Smart Hardware' }
+  ],
+  'quant-mind': [
+    { zh: '学术协作', en: 'Academic Coop' },
+    { zh: '教育支教', en: 'Tech Tutor' }
+  ],
+  'echo-heritage': [
+    { zh: '非遗文化', en: 'Heritage Preservation' },
+    { zh: '声学艺术', en: 'Acoustic Art' }
+  ],
+  'aqua-drop': [
+    { zh: '绿色可持续', en: 'Sustainability' },
+    { zh: '教育支教', en: 'Tech Tutor' }
+  ],
+  'bio-silk': [
+    { zh: '绿色可持续', en: 'Sustainability' },
+    { zh: '智能硬件', en: 'Smart Hardware' }
+  ],
+  'space-tack': [
+    { zh: '学术协作', en: 'Academic Coop' },
+    { zh: '青年领袖', en: 'Youth Leadership' }
+  ],
+  'luna-study': [
+    { zh: '学术协作', en: 'Academic Coop' },
+    { zh: '校友网络', en: 'Alumni Network' }
+  ],
+  'terra-farm': [
+    { zh: '绿色可持续', en: 'Sustainability' },
+    { zh: '教育支教', en: 'Tech Tutor' }
+  ],
+  'zen-code': [
+    { zh: '智能硬件', en: 'Smart Hardware' },
+    { zh: '教育支教', en: 'Tech Tutor' }
+  ]
+};
+
 export default function SpaceGameView({
   projects,
   onSelectProject,
@@ -49,6 +173,8 @@ export default function SpaceGameView({
   const [showGuide, setShowGuide] = useState(true);
   const [hudActive, setHudActive] = useState(false);
   const hudActiveRef = useRef(false);
+
+
 
   // On-screen direction thruster keys
   const triggerThrust = (direction: string, active: boolean) => {
@@ -553,6 +679,8 @@ export default function SpaceGameView({
       scene.add(orbitLine);
     });
 
+
+
     // 9. Input and Camera flight variables
     let yaw = 0;
     let pitch = 0;
@@ -567,7 +695,7 @@ export default function SpaceGameView({
     // Active flight coordinate system
     const camFlightPos = new THREE.Vector3(0, 0, 95);
     const velocity = new THREE.Vector3();
-    const accelRate = 0.03;
+    const accelRate = 0.06;
 
     // Keyboard handlers
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -707,7 +835,7 @@ export default function SpaceGameView({
       const targetProg = isSpaceState ? 1.0 : 0.0;
       
        // Interpolate progress smoothly with frame-rate independent ease-out damping (slowed down by 50% for high cinematic feel)
-      transitionProgress += (targetProg - transitionProgress) * (isSpaceState ? 0.019 : 0.024);
+      transitionProgress += (targetProg - transitionProgress) * 0.05;
 
       // Reset space flight coordinates once the camera is safely fully back on the landing page
       if (!isSpaceState && transitionProgress < 0.01) {
@@ -765,8 +893,8 @@ export default function SpaceGameView({
 
       // Apply drag resistance (gentle cosmic friction for coasting inertia sliding)
       velocity.multiplyScalar(0.985);
-      if (velocity.length() > 0.5) {
-        velocity.setLength(0.5);
+      if (velocity.length() > 1.0) {
+        velocity.setLength(1.0);
       }
       camFlightPos.add(velocity);
 
@@ -939,6 +1067,8 @@ export default function SpaceGameView({
         }
       });
 
+
+
       // C. HIGH-PRECISION LANDING VIEW EXPLORE BUTTON ANCHORING
       const exploreBtnEl = document.getElementById('explore-anchored-btn');
       if (exploreBtnEl) {
@@ -1079,13 +1209,15 @@ export default function SpaceGameView({
 
                 {isHovered && (
                   <p className="text-[8px] text-indigo-400 font-mono font-bold mt-1.5 animate-pulse uppercase tracking-wider">
-                    {lang === 'zh' ? '✦ 点击深度探索 ✦' : '✦ CLICK TO TOUCH ✦'}
+                    {lang === 'zh' ? '✦ 点击探索项目 ✦' : '✦ CLICK TO EXPLORE PROJECT ✦'}
                   </p>
                 )}
               </div>
             </div>
           );
         })}
+
+
       </div>
 
       {/* SPACE INTERACTIVE HUD GAUGE OVERLAYS (Visible only in active space navigation with elegant fade-in) */}
@@ -1107,35 +1239,9 @@ export default function SpaceGameView({
               <p>CAM Z: <span className="text-white font-bold">{cameraCoords.z}m</span></p>
             </div>
 
-            {/* Hover Status Info Top Center Banner */}
-            {hoveredProject && (
-              <div className="absolute top-10 lg:top-14 xl:top-16 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md border border-slate-700/60 px-5 py-3 rounded-2xl shadow-xl flex items-center gap-4 pointer-events-none text-slate-200 select-none z-10">
-                <div className="w-3.5 h-3.5 rounded-full animate-ping bg-slate-300" />
-                <div>
-                  <h4 className="text-xs font-bold font-sans tracking-tight uppercase text-white">{hoveredProject.name}</h4>
-                  <p className="text-[10px] text-slate-400 font-mono mt-0.5">
-                    Type: {hoveredProject.type} | Founding: {hoveredProject.founded}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Bottom Information Notice Bar */}
-            <div className="absolute bottom-10 left-10 lg:bottom-14 lg:left-14 xl:bottom-16 xl:left-16 pointer-events-none font-sans text-slate-400 text-xs text-shadow select-none z-10">
-              <div className="bg-slate-900/80 backdrop-blur-md px-4 py-3 rounded-2xl border border-slate-800/80 max-w-sm pointer-events-auto shadow-lg">
-                <p className="text-slate-200 text-xs flex items-center gap-1.5 font-semibold">
-                  <Compass className="w-4 h-4 text-emerald-400 animate-spin-slow" />
-                  <span>{lang === 'zh' ? '星际漫游助手' : 'Cosmic Guidance'}</span>
-                </p>
-                <p className="text-[11px] text-slate-400 leading-relaxed mt-1.5">
-                  {t.game.hoverTip}
-                </p>
-              </div>
-            </div>
-
-            {/* On-Screen Keyboard Guide Helpers Box in bottom right, replacing joystick */}
+            {/* On-Screen Keyboard Guide Helpers Box in bottom left, replacing joystick */}
             {showGuide ? (
-              <div className="absolute bottom-10 right-10 lg:bottom-14 lg:right-14 xl:bottom-16 xl:right-16 bg-slate-900/95 border border-indigo-500/30 text-slate-200 px-6 py-4 rounded-2xl shadow-2xl space-y-2 pointer-events-auto max-w-sm select-none z-10 w-72 sm:w-80">
+              <div className="absolute bottom-10 left-10 lg:bottom-14 lg:left-14 xl:bottom-16 xl:left-16 bg-slate-900/95 border border-indigo-500/30 text-slate-200 px-6 py-4 rounded-2xl shadow-2xl space-y-2 pointer-events-auto max-w-sm select-none z-10 w-72 sm:w-80">
                 <button
                   onClick={() => setShowGuide(false)}
                   className="absolute top-2.5 right-3 w-5 h-5 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 font-mono text-[10px] rounded-full flex items-center justify-center cursor-pointer"
@@ -1159,7 +1265,7 @@ export default function SpaceGameView({
             ) : (
               <button
                 onClick={() => setShowGuide(true)}
-                className="absolute bottom-10 right-10 lg:bottom-14 lg:right-14 xl:bottom-16 xl:right-16 w-11 h-11 rounded-full bg-slate-900/95 border border-indigo-500/30 flex items-center justify-center text-indigo-400 hover:text-indigo-300 shadow-2xl select-none z-10 cursor-pointer pointer-events-auto transition-all duration-300 group"
+                className="absolute bottom-10 left-10 lg:bottom-14 lg:left-14 xl:bottom-16 xl:left-16 w-11 h-11 rounded-full bg-slate-900/95 border border-indigo-500/30 flex items-center justify-center text-indigo-400 hover:text-indigo-300 shadow-2xl select-none z-10 cursor-pointer pointer-events-auto transition-all duration-300 group"
                 title={t.game.instructions}
               >
                 <HelpCircle className="w-5 h-5 group-hover:scale-110 transition-all duration-300" />
